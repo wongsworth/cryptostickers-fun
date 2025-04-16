@@ -1,0 +1,1 @@
+create table if not exists tags (id uuid default uuid_generate_v4() primary key, name text unique not null, created_at timestamp with time zone default timezone('utc'::text, now()) not null); alter table tags enable row level security; create policy "Allow all operations for tags" on tags for all using (true) with check (true);
