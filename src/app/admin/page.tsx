@@ -12,6 +12,8 @@ interface Image {
   url: string
   title?: string
   tags: string[] | null
+  views: number
+  description: string | null
 }
 
 interface Tag {
@@ -218,7 +220,8 @@ export default function AdminPage() {
       const { error } = await supabase
         .from('images')
         .update({
-          tags: editSelectedTags.length > 0 ? editSelectedTags : null
+          tags: editSelectedTags.length > 0 ? editSelectedTags : null,
+          description: editingImage.description
         })
         .eq('id', editingImage.id)
 
@@ -229,7 +232,8 @@ export default function AdminPage() {
         img.id === editingImage.id 
           ? { 
               ...img, 
-              tags: editSelectedTags.length > 0 ? editSelectedTags : null
+              tags: editSelectedTags.length > 0 ? editSelectedTags : null,
+              description: editingImage.description
             }
           : img
       ))
@@ -517,21 +521,41 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-4">
+                {/* Description Input */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    value={editingImage.description || ''}
+                    onChange={(e) => setEditingImage({...editingImage, description: e.target.value})}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Enter a description for this image..."
+                  />
+                </div>
+
                 {/* Tag Selection in Edit Modal */}
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <button
-                      key={tag.id}
-                      onClick={() => toggleTag(tag.name, true)}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        editSelectedTags.includes(tag.name)
-                          ? 'bg-gray-600 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Keywords
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() => toggleTag(tag.name, true)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          editSelectedTags.includes(tag.name)
+                            ? 'bg-gray-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button

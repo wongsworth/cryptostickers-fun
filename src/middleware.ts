@@ -8,17 +8,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req: request, res })
+  const response = NextResponse.next()
+  const supabase = createMiddlewareClient({ req: request, res: response })
 
-  // Add security headers
-  const headers = res.headers
-  
+  // Refresh session if expired - required for Server Components
+  await supabase.auth.getSession()
+
+  // Get response headers
+  const headers = response.headers
+
   // CORS headers
-  headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_SITE_URL || '*')
+  headers.set('Access-Control-Allow-Origin', '*')
   headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  
+
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 200,
+      headers,
+    })
+  }
+
   // Security headers
   headers.set('X-DNS-Prefetch-Control', 'on')
   headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
@@ -34,7 +45,7 @@ export async function middleware(request: NextRequest) {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      `img-src 'self' blob: data: ${process.env.NEXT_PUBLIC_SUPABASE_URL || '*'}`,
+      "img-src 'self' blob: data: https://*.supabase.co",
       "font-src 'self'",
       "connect-src 'self' https://*.supabase.co",
       "frame-ancestors 'none'",
@@ -51,7 +62,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return res
+  return response
 }
 
 export const config = {

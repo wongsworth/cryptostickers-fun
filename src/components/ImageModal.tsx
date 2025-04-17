@@ -1,38 +1,47 @@
 'use client'
 
 import { Dialog, Transition } from '@headlessui/react'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import { XMarkIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-
-interface Image {
-  id: string
-  url: string
-  title?: string
-  category?: string
-  tags?: string[]
-}
+import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
+import { Image as ImageType } from '../types/image'
 
 interface ImageModalProps {
-  image: Image
+  image: ImageType
   onClose: () => void
 }
 
 export default function ImageModal({ image, onClose }: ImageModalProps) {
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(image.url)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = image.title || 'crypto-sticker.png'
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (error) {
-      console.error('Error downloading image:', error)
+  useEffect(() => {
+    // Increment view count when modal opens
+    const incrementViews = async () => {
+      try {
+        const { error } = await supabase
+          .from('images')
+          .update({ views: image.views + 1 })
+          .eq('id', image.id)
+        
+        if (error) throw error
+      } catch (error) {
+        console.error('Error incrementing views:', error)
+      }
     }
+
+    incrementViews()
+  }, [image.id])
+
+  const handleDownload = async () => {
+    const response = await fetch(image.url)
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'crypto-sticker.png'
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
   }
 
   return (
@@ -73,11 +82,15 @@ export default function ImageModal({ image, onClose }: ImageModalProps) {
                 </div>
 
                 <div className="mt-4">
-                  <img
-                    src={image.url}
-                    alt={image.title || 'Crypto sticker'}
-                    className="w-full h-auto max-h-[80vh] object-contain"
-                  />
+                  <div className="relative aspect-square">
+                    <Image
+                      src={image.url}
+                      alt="Sticker"
+                      fill
+                      className="object-contain p-4"
+                      sizes="(max-width: 1024px) 90vw, 1024px"
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-4 flex justify-center">

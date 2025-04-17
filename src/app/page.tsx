@@ -3,18 +3,23 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
-import { XMarkIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, ArrowDownTrayIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface ImageType {
   id: string
   url: string
   tags: string[] | null
+  views: number
+  created_at: string
+  description: string | null
 }
 
 interface Tag {
   id: string
   name: string
 }
+
+type SortOrder = 'recent' | 'popular'
 
 export default function Home() {
   const [images, setImages] = useState<ImageType[]>([])
@@ -23,21 +28,37 @@ export default function Home() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<ImageType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sortOrder, setSortOrder] = useState<SortOrder>('recent')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showInstructions, setShowInstructions] = useState(true)
 
   useEffect(() => {
     fetchImages()
     fetchTags()
-  }, [])
+  }, [sortOrder])
 
   useEffect(() => {
+    let filtered = images
+
+    // Apply tag filter
     if (selectedTag) {
-      setFilteredImages(images.filter(image => 
+      filtered = filtered.filter(image => 
         image.tags?.includes(selectedTag)
-      ))
-    } else {
-      setFilteredImages(images)
+      )
     }
-  }, [selectedTag, images])
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(image => {
+        const matchesDescription = image.description?.toLowerCase().includes(query) || false
+        const matchesTags = image.tags?.some(tag => tag.toLowerCase().includes(query)) || false
+        return matchesDescription || matchesTags
+      })
+    }
+
+    setFilteredImages(filtered)
+  }, [selectedTag, images, searchQuery])
 
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
@@ -55,7 +76,9 @@ export default function Home() {
       const { data, error } = await supabase
         .from('images')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order(sortOrder === 'recent' ? 'created_at' : 'views', { 
+          ascending: false 
+        })
 
       if (error) throw error
       setImages(data || [])
@@ -123,78 +146,127 @@ export default function Home() {
               @Wongsworth
             </a>
           </p>
+        </div>
 
-          {/* Instructions */}
-          <div className="max-w-2xl mx-auto mb-16 bg-gray-50 rounded-xl p-8 shadow-md border-2 border-gray-200">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
-              How to Create a Sticker
-            </h2>
-            <ol className="space-y-4 text-gray-700 text-left">
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">1</span>
-                <span>Select an image below and save it to your phone.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">2</span>
-                <span>Open your Photos app, select the photo and open the photo in full screen.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">3</span>
-                <span>Touch and hold the subject of the photo, then release. A popup menu will appear.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">4</span>
-                <span>Tap "Add Sticker" from the menu.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">5</span>
-                <span>Your sticker is now saved and can be accessed in iMessage and WhatsApp.</span>
-              </li>
-            </ol>
-          </div>
-
-          {/* Donation Info */}
-          <div className="max-w-2xl mx-auto mb-12 text-center">
-            <p className="text-gray-700 mb-4">
-              This resource is free, please enjoy!<br />
-              Any gifts/donations are greatly appreciated
-            </p>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>btc: bc1q572vqtgqhd9s9800sc76wzrvx7kxn6s2fqvgs4</p>
-              <p>eth: 0x3166dB56F20a87e25bA2463747B303bE88ba3E5B</p>
-              <p>sol: FMbUc88pMoixLoFbUC2GrWQuDaHvWdMbUBzgt9oH4REg</p>
-              <p>base: 0x3166dB56F20a87e25bA2463747B303bE88ba3E5B</p>
+        {/* Instructions */}
+        <div className="max-w-2xl mx-auto mb-16">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <button
+              onClick={() => setShowInstructions(!showInstructions)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors relative"
+            >
+              <h2 className="text-2xl font-semibold text-gray-800 w-full text-center pr-6">
+                How to Create a Sticker
+              </h2>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <ChevronUpIcon className={`h-6 w-6 text-gray-600 transition-transform ${showInstructions ? '' : 'rotate-180'}`} />
+              </div>
+            </button>
+            
+            <div className={`${showInstructions ? 'block' : 'hidden'}`}>
+              <ol className="p-4 space-y-4 text-gray-700">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">1</span>
+                  <span>Select an image below and save it to your phone.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">2</span>
+                  <span>Open your Photos app, select the photo and open the photo in full screen.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">3</span>
+                  <span>Touch and hold the subject of the photo, then release. A popup menu will appear.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">4</span>
+                  <span>Tap "Add Sticker" from the menu.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">5</span>
+                  <span>Your sticker is now saved and can be accessed in iMessage and WhatsApp.</span>
+                </li>
+              </ol>
             </div>
           </div>
+        </div>
 
-          {/* Filter Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Filter by Tag</h2>
-            <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+        {/* Donation Info */}
+        <div className="max-w-2xl mx-auto mb-12 text-center">
+          <p className="text-gray-700 mb-4">
+            This resource is free, please enjoy!<br />
+            Any gifts/donations are greatly appreciated
+          </p>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>btc: bc1q572vqtgqhd9s9800sc76wzrvx7kxn6s2fqvgs4</p>
+            <p>eth: 0x3166dB56F20a87e25bA2463747B303bE88ba3E5B</p>
+            <p>sol: FMbUc88pMoixLoFbUC2GrWQuDaHvWdMbUBzgt9oH4REg</p>
+            <p>base: 0x3166dB56F20a87e25bA2463747B303bE88ba3E5B</p>
+          </div>
+        </div>
+
+        {/* Filter Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-center">Filter by Tag</h2>
+          <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                !selectedTag
+                  ? 'bg-gray-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              See All
+            </button>
+            {tags.map((tag) => (
               <button
-                onClick={() => setSelectedTag(null)}
+                key={tag.id}
+                onClick={() => handleTagClick(tag.name)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  !selectedTag
+                  selectedTag === tag.name
                     ? 'bg-gray-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                See All
+                {tag.name}
               </button>
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => handleTagClick(tag.name)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedTag === tag.name
-                      ? 'bg-gray-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort Controls and Search */}
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setSortOrder('recent')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                sortOrder === 'recent'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Most Recent
+            </button>
+            <button
+              onClick={() => setSortOrder('popular')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                sortOrder === 'popular'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              Most Popular
+            </button>
+          </div>
+          <div className="relative max-w-md">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by description or tags..."
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           </div>
         </div>
 

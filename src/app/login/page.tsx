@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/lib/database.types'
-import { ratelimit } from '@/lib/ratelimit'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -21,18 +20,6 @@ export default function Login() {
     setError(null)
 
     try {
-      // Check rate limit
-      if (ratelimit) {
-        const ip = await fetch('/api/get-ip').then(res => res.text())
-        const { success, limit, reset, remaining } = await ratelimit.limit(ip)
-        
-        if (!success) {
-          const now = Date.now()
-          const seconds = Math.ceil((reset - now) / 1000)
-          throw new Error(`Too many login attempts. Please try again in ${seconds} seconds.`)
-        }
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -68,11 +55,11 @@ export default function Login() {
     <main className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Admin Login
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Connected to Supabase' : 'Supabase configuration missing'}
+            Admin Login
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
