@@ -225,7 +225,7 @@ export default function Home() {
                 showTags ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               } overflow-hidden`}
             >
-              <div className="flex flex-wrap justify-center gap-2 p-4">
+              <div className="flex flex-wrap justify-center gap-2 p-4 max-h-[300px] overflow-y-auto">
                 <button
                   onClick={() => setSelectedTag(null)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
