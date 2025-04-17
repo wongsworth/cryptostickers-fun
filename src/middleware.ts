@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Skip middleware for static files
+  if (request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|svg|webmanifest)$/)) {
+    return NextResponse.next()
+  }
+
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req: request, res })
 
@@ -38,10 +43,9 @@ export async function middleware(request: NextRequest) {
     ].join('; ')
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
-
   // Only protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
+    const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -52,13 +56,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image).*)',
   ],
 } 
