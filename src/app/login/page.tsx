@@ -58,8 +58,11 @@ export default function Login() {
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <h2 className="text-2xl font-bold text-center text-gray-900">
             Admin Login
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Connected to Supabase' : 'Supabase configuration missing'}
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

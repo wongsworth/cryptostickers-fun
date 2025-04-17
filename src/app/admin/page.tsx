@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, PencilIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, HomeIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { Database } from '@/lib/database.types'
+import Link from 'next/link'
 
 interface Image {
   id: string
@@ -33,6 +34,7 @@ export default function AdminPage() {
   const [editingImage, setEditingImage] = useState<Image | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
   const [newTag, setNewTag] = useState('')
+  const [showTags, setShowTags] = useState(true)
   
   // Form states
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -378,12 +380,21 @@ export default function AdminPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Sign Out
-          </button>
+          <div className="flex gap-2">
+            <Link 
+              href="/"
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center gap-2"
+            >
+              <HomeIcon className="h-5 w-5" />
+              Home
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -434,28 +445,42 @@ export default function AdminPage() {
 
         {/* Tag Management Section */}
         <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium mb-4">Manage Tags</h2>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="New tag name"
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-              />
-              <button
-                onClick={handleAddTag}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Add Tag
-              </button>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {renderTags()}
-            </div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium">Manage Tags</h2>
+            <button
+              onClick={() => setShowTags(!showTags)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              {showTags ? (
+                <ChevronUpIcon className="h-5 w-5" />
+              ) : (
+                <ChevronDownIcon className="h-5 w-5" />
+              )}
+            </button>
           </div>
+          {showTags && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="New tag name"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                />
+                <button
+                  onClick={handleAddTag}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Add Tag
+                </button>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {renderTags()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Images Grid */}

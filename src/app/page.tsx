@@ -31,6 +31,7 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('recent')
   const [searchQuery, setSearchQuery] = useState('')
   const [showInstructions, setShowInstructions] = useState(true)
+  const [showTags, setShowTags] = useState(true)
 
   useEffect(() => {
     fetchImages()
@@ -153,17 +154,19 @@ export default function Home() {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <button
               onClick={() => setShowInstructions(!showInstructions)}
-              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors relative"
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
             >
-              <h2 className="text-2xl font-semibold text-gray-800 w-full text-center pr-6">
-                How to Create a Sticker
-              </h2>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <ChevronUpIcon className={`h-6 w-6 text-gray-600 transition-transform ${showInstructions ? '' : 'rotate-180'}`} />
+              <h2 className="text-2xl font-semibold text-gray-800">How to Create a Sticker</h2>
+              <div className="transform transition-transform duration-300">
+                <ChevronUpIcon className={`h-6 w-6 text-gray-600 ${showInstructions ? 'rotate-0' : 'rotate-180'}`} />
               </div>
             </button>
             
-            <div className={`${showInstructions ? 'block' : 'hidden'}`}>
+            <div 
+              className={`transition-all duration-500 ease-in-out ${
+                showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              } overflow-hidden`}
+            >
               <ol className="p-4 space-y-4 text-gray-700">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 text-gray-700 rounded-full font-medium">1</span>
@@ -192,11 +195,11 @@ export default function Home() {
 
         {/* Donation Info */}
         <div className="max-w-2xl mx-auto mb-12 text-center">
-          <p className="text-gray-700 mb-4">
+          <p className="text-sm text-gray-700 mb-4">
             This resource is free, please enjoy!<br />
             Any gifts/donations are greatly appreciated
           </p>
-          <div className="space-y-2 text-sm text-gray-600">
+          <div className="space-y-2 text-xs text-gray-600">
             <p>btc: bc1q572vqtgqhd9s9800sc76wzrvx7kxn6s2fqvgs4</p>
             <p>eth: 0x3166dB56F20a87e25bA2463747B303bE88ba3E5B</p>
             <p>sol: FMbUc88pMoixLoFbUC2GrWQuDaHvWdMbUBzgt9oH4REg</p>
@@ -204,33 +207,50 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Filter Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-center">Filter by Tag</h2>
-          <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+        {/* Filter by Tag Section */}
+        <div className="max-w-2xl mx-auto mb-16">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <button
-              onClick={() => setSelectedTag(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                !selectedTag
-                  ? 'bg-gray-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              onClick={() => setShowTags(!showTags)}
+              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
             >
-              See All
+              <h2 className="text-2xl font-semibold text-gray-800">Filter by Tag</h2>
+              <div className="transform transition-transform duration-300">
+                <ChevronUpIcon className={`h-6 w-6 text-gray-600 ${showTags ? 'rotate-0' : 'rotate-180'}`} />
+              </div>
             </button>
-            {tags.map((tag) => (
-              <button
-                key={tag.id}
-                onClick={() => handleTagClick(tag.name)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedTag === tag.name
-                    ? 'bg-gray-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {tag.name}
-              </button>
-            ))}
+            
+            <div 
+              className={`transition-all duration-500 ease-in-out ${
+                showTags ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              } overflow-hidden`}
+            >
+              <div className="flex flex-wrap justify-center gap-2 p-4">
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    !selectedTag
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  See All
+                </button>
+                {tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagClick(tag.name)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedTag === tag.name
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
